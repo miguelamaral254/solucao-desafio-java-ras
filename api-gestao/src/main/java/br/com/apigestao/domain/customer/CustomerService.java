@@ -46,7 +46,7 @@ public class CustomerService {
     @Transactional(readOnly = true)
     public Customer findById(Long id) {
         return customerRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Clente não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Customer not found"));
     }
 
     @Transactional(readOnly = true)
@@ -102,19 +102,16 @@ public class CustomerService {
     }
 
     @Transactional
-    public Customer disableCustomer(Long id, Boolean disable) {
+    public Customer disableCustomer(Long id) {
         Customer c = findById(id);
-        validateDisable(c, disable);
-        c.setEnabled(disable);
+        validateDisable(c);
+        c.setEnabled(false);
         return customerRepository.save(c);
     }
 
-    private void validateDisable(Customer c, Boolean disable) {
-        if (!disable) {
-            throw new InvalidException("Usuário já está desabilitado");
-        }
-        if (c.getEnabled().equals(disable)) {
-            throw new InvalidException("Usuário já está desabilitado");
+    private void validateDisable(Customer c) {
+        if (!c.getEnabled()) {
+            throw new InvalidException("User is already disabled");
         }
     }
     // Incluido disableCustomer() para soft delete
