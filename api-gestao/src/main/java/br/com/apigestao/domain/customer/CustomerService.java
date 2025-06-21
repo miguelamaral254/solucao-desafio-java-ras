@@ -3,18 +3,23 @@ package br.com.apigestao.domain.customer;
 import br.com.apigestao.domain.exceptions.ConflictException;
 import br.com.apigestao.domain.exceptions.InvalidException;
 import br.com.apigestao.domain.exceptions.NotFoundException;
+import jakarta.validation.ConstraintViolation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
+import jakarta.validation.Validator;
+
+import java.util.Set;
 import java.util.function.Consumer;
 
 @AllArgsConstructor
 @Service
 public class CustomerService {
     private CustomerRepository customerRepository;
+    private Validator validator;
 
     @Transactional()
     public Customer createCustomer(Customer customer) {
@@ -22,33 +27,39 @@ public class CustomerService {
 
         return customerRepository.save(customer);
     }
+
     private void validateBusinessRules(Customer c) {
+        if (c.getCpf() != null) {
+            Set<ConstraintViolation<Customer>> violations = validator.validateProperty(c, "cpf");
+            if (!violations.isEmpty()) {
+                throw new InvalidException("Customer cpf format is invalid");
+            }
+
+            if (customerRepository.existsByCpf(c.getCpf())) {
+                throw new ConflictException("Customer cpf already exists");
+            }
+        }
+        if (c.getEmail() != null) {
+            if (customerRepository.existsByEmail(c.getEmail())) {
+                throw new ConflictException("Customer email already exists");
+            }
+
+            if (!isValidEmail(c.getEmail())) {
+                throw new InvalidException("Customer email format is invalid");
+            }
+        }
         if (c.getName() == null || c.getName().trim().isEmpty()) {
             throw new InvalidException("Customer name is required");
         }
-
-        if (c.getEmail() != null && !c.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            throw new InvalidException("Customer email format is invalid");
+        if (c.getPhone() != null && !isValidPhoneNumber(c.getPhone())) {
+            throw new InvalidException("Customer phone format is invalid. Use the format: (XX) XXXXX-XXXX.");
         }
-
-        if (c.getPhone() != null && !c.getPhone().matches("\\(\\d{2}\\)\\s?\\d{5}-\\d{4}")) {
-            throw new InvalidException("Customer phone format is invalid. Use the format: (XX) XXXXX-XXXX");
-        }
-
         if (c.getCpf() == null || c.getCpf().trim().isEmpty()) {
             throw new InvalidException("Customer cpf is required");
         }
 
-        if (customerRepository.existsByCpf(c.getCpf())) {
-            throw new ConflictException("Customer cpf already exists");
-        }
-        if (customerRepository.existsByEmail(c.getEmail())) {
-            throw new ConflictException("Customer email already exists");
-        }
-        if (!c.getCpf().matches("^[0-9]{11}$")) {
-            throw new InvalidException("Customer cpf format is invalid");
-        }
     }
+
     @Transactional(readOnly = true)
     public Customer findById(Long id) {
         return customerRepository.findById(id)
@@ -57,47 +68,45 @@ public class CustomerService {
 
     @Transactional(readOnly = true)
     public Page<Customer> searchCustomer(Specification<Customer> specification, Pageable pageable) {
-        return customerRepository.findAll(specification,pageable);
+        return customerRepository.findAll(specification, pageable);
     }
 
     @Transactional
     public Customer updateCustomer(Long id, Consumer<Customer> mergeNonNull) {
         Customer customer = findById(id);
-        final String oldEmail = customer.getEmail();
-        final String oldCpf = customer.getCpf();
-        final String oldPhone = customer.getPhone();
-        final String oldName = customer.getName();
-
+        validateUpdate(customer, mergeNonNull);
         mergeNonNull.accept(customer);
-        validateUpdate(customer, oldEmail, oldCpf, oldPhone, oldName);
 
         return customerRepository.save(customer);
     }
 
-    private void validateUpdate(Customer customer, String oldEmail, String oldCpf, String oldPhone, String oldName) {
-        if (customer.getName() == null || customer.getName().trim().isEmpty()) {
-            throw new InvalidException("Customer name is required");
+    private void validateUpdate(Customer existingCustomer, Consumer<Customer> mergeNonNull) {
+        Customer newCustomer = new Customer();
+        mergeNonNull.accept(newCustomer);
+
+        if (newCustomer.getPhone() != null && !isValidPhoneNumber(newCustomer.getPhone())) {
+            throw new InvalidException("Customer phone format is invalid. Use the format: (XX) XXXXX-XXXX.");
         }
-        if (!oldEmail.equals(customer.getEmail()) && customerRepository.existsByEmail(customer.getEmail())) {
-            throw new ConflictException("Email already exists");
+        if (newCustomer.getName() != null && newCustomer.getName().trim().isEmpty()) {
+            throw new InvalidException("Customer name is required.");
         }
-        if (customer.getEmail() == null || customer.getEmail().trim().isEmpty()) {
-            throw new InvalidException("Customer email is required");
+        if (newCustomer.getEmail() != null && !newCustomer.getEmail().equals(existingCustomer.getEmail())) {
+            if (!isValidEmail(newCustomer.getEmail())) {
+                throw new InvalidException("Customer email format is invalid");
+            }
+            if (customerRepository.existsByEmail(newCustomer.getEmail())) {
+                throw new ConflictException("Email already exists.");
+            }
         }
-        if (!customer.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            throw new InvalidException("Customer email format is invalid");
-        }
-        if (!oldPhone.equals(customer.getPhone()) && !customer.getPhone().matches("\\d+")) {
-            throw new InvalidException("Customer phone format is invalid. Only numbers are allowed.");
-        }
-        if (customer.getPhone() == null || customer.getPhone().trim().isEmpty()) {
-            throw new InvalidException("Customer phone is required");
-        }
-        if (!oldCpf.equals(customer.getCpf()) && customerRepository.existsByCpf(customer.getCpf())) {
-            throw new ConflictException("CPF already exists");
-        }
-        if (customer.getCpf() == null || customer.getCpf().trim().isEmpty()) {
-            throw new InvalidException("Customer cpf is required");
+
+        if (newCustomer.getCpf() != null) {
+            if (!newCustomer.getCpf().equals(existingCustomer.getCpf()) && customerRepository.existsByCpf(newCustomer.getCpf())) {
+                throw new ConflictException("CPF already exists.");
+            }
+            Set<ConstraintViolation<Customer>> violations = validator.validateProperty(newCustomer, "cpf");
+            if (!violations.isEmpty()) {
+                throw new InvalidException("Customer cpf format is invalid");
+            }
         }
     }
 
@@ -120,5 +129,15 @@ public class CustomerService {
             throw new InvalidException("User is already disabled");
         }
     }
-    // Incluido disableCustomer() para soft delete
+
+    // Aqui inclui o disableCustomer() para soft delete
+    private boolean isValidPhoneNumber(String phone) {
+
+        return phone.matches("\\(\\d{2}\\) \\d{4,5}-\\d{4}");
+    }
+
+    private boolean isValidEmail(String email) {
+        return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+    }
+
 }

@@ -2,6 +2,7 @@ package br.com.apigestao.domain.customer;
 
 import br.com.apigestao.core.ApplicationResponse;
 import br.com.apigestao.infrastructure.validations.CreateValidation;
+import br.com.apigestao.infrastructure.validations.UpdateValidation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -87,4 +88,28 @@ public class CustomerController {
                 .status(HttpStatus.OK)
                 .body(ApplicationResponse.ofSuccess(customerDTO));
     }
+
+
+    @Operation(summary = "Update an existing Customer")
+    @PutMapping("/{id}")
+    public ResponseEntity<ApplicationResponse<CustomerDTO>> updateCustomer(
+            @PathVariable Long id,
+            @Validated(UpdateValidation.class)
+            @RequestBody CustomerDTO customerDtoUpdates) {
+        Customer customerUpdated = customerService.updateCustomer(id, Customer -> customerMapper.mergeNonNull(customerDtoUpdates, Customer));
+        CustomerDTO updatedCustomerDto = customerMapper.toDto(customerUpdated);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApplicationResponse.ofSuccess(updatedCustomerDto));
+    }
+
+    @Operation(summary = "Delete a Customer by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+        customerService.deleteCustomer(id);
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .build();
+    }
+
 }
