@@ -29,16 +29,15 @@ public class Customer extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String cpf;
 
-    @Column()
-    private String phone;
-
     @Email
     @Column(unique = true)
     private String email;
 
+    private String phone;
+
      /*
     “Apesar de não estar especificado nas
-    regras, optei por adicionar uma restrição unique
+    regras, optei por adicionar uma constraint unique
     para o campo de e-mail.”
      */
 }

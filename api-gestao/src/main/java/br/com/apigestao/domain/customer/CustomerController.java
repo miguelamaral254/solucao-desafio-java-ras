@@ -3,6 +3,7 @@ package br.com.apigestao.domain.customer;
 import br.com.apigestao.core.ApplicationResponse;
 import br.com.apigestao.infrastructure.validations.CreateValidation;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,12 @@ public class CustomerController {
     private final CustomerMapper customerMapper;
     private final CustomerService customerService;
 
+    @Operation(
+            summary = "Create a new customer",
+            description = "Creates a new customer in the system using the provided customer data. The created customer's URI will be returned in the Location header."
+    )
+    @ApiResponse(responseCode = "201", description = "Customer successfully created", content = {})
+    @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {})
     @PostMapping
     public ResponseEntity<Void> createCustomer(
             @Validated(CreateValidation.class)
@@ -42,10 +49,15 @@ public class CustomerController {
                 .build();
 
     }
+
+    @Operation(
+            summary = "Search customers with filters and pagination",
+            description = "Search for customers by optional filters like email, CPF, and phone number. Returns a paginated list of customers."
+    )
+    @ApiResponse(responseCode = "200", description = "Customers retrieved successfully", content = {})
+    @ApiResponse(responseCode = "400", description = "Invalid filter data provided", content = {})
     @GetMapping
-    @Operation(summary = "Buscar clientes com filtros e paginação")
     public ResponseEntity<ApplicationResponse<Page<CustomerDTO>>> searchCustomers(
-            @RequestParam(value="id", required = false) Long id,
             @RequestParam(value="email", required = false) String email,
             @RequestParam(value="cpf", required = false) String cpf,
             @RequestParam(value="phone", required = false) String phone,

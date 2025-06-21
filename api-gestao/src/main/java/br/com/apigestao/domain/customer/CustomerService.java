@@ -26,23 +26,29 @@ public class CustomerService {
         if (c.getName() == null || c.getName().trim().isEmpty()) {
             throw new InvalidException("Customer name is required");
         }
-        if (!c.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+
+        if (c.getEmail() != null && !c.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             throw new InvalidException("Customer email format is invalid");
         }
-        if (!c.getPhone().matches("\\d+")) {
-            throw new InvalidException("Customer phone format is invalid. Only numbers are allowed.");
+
+        if (c.getPhone() != null && !c.getPhone().matches("\\(\\d{2}\\)\\s?\\d{5}-\\d{4}")) {
+            throw new InvalidException("Customer phone format is invalid. Use the format: (XX) XXXXX-XXXX");
         }
+
         if (c.getCpf() == null || c.getCpf().trim().isEmpty()) {
             throw new InvalidException("Customer cpf is required");
         }
+
         if (customerRepository.existsByCpf(c.getCpf())) {
             throw new ConflictException("Customer cpf already exists");
         }
         if (customerRepository.existsByEmail(c.getEmail())) {
             throw new ConflictException("Customer email already exists");
         }
+        if (!c.getCpf().matches("^[0-9]{11}$")) {
+            throw new InvalidException("Customer cpf format is invalid");
+        }
     }
-
     @Transactional(readOnly = true)
     public Customer findById(Long id) {
         return customerRepository.findById(id)
