@@ -32,6 +32,7 @@ public class CustomerController {
     )
     @ApiResponse(responseCode = "201", description = "Customer successfully created", content = {})
     @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {})
+    @ApiResponse(responseCode = "409", description = "Conflict - Customer data already exists", content = {})
     @PostMapping
     public ResponseEntity<Void> createCustomer(
             @Validated(CreateValidation.class)
@@ -48,7 +49,6 @@ public class CustomerController {
                 .status(HttpStatus.CREATED)
                 .location(location)
                 .build();
-
     }
 
     @Operation(
@@ -89,8 +89,13 @@ public class CustomerController {
                 .body(ApplicationResponse.ofSuccess(customerDTO));
     }
 
-
-    @Operation(summary = "Update an existing Customer")
+    @Operation(
+            summary = "Update an existing Customer",
+            description = "This operation updates an existing customer's details based on the provided customer ID. The customer's data will be updated with the provided fields."
+    )
+    @ApiResponse(responseCode = "200", description = "Customer successfully updated", content = {})
+    @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {})
+    @ApiResponse(responseCode = "409", description = "Conflict - Customer data already exists", content = {})
     @PutMapping("/{id}")
     public ResponseEntity<ApplicationResponse<CustomerDTO>> updateCustomer(
             @PathVariable Long id,
@@ -103,7 +108,13 @@ public class CustomerController {
                 .body(ApplicationResponse.ofSuccess(updatedCustomerDto));
     }
 
-    @Operation(summary = "Delete a Customer by ID")
+    @Operation(
+            summary = "Delete a Customer by ID",
+            description = "This operation deletes a customer from the system using the provided customer ID."
+    )
+    @ApiResponse(responseCode = "204", description = "Customer successfully deleted", content = {})
+    @ApiResponse(responseCode = "404", description = "Customer not found", content = {})
+    @ApiResponse(responseCode = "400", description = "Invalid customer ID provided", content = {})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
@@ -112,4 +123,18 @@ public class CustomerController {
                 .build();
     }
 
+    @Operation(
+            summary = "Disable an existing Customer",
+            description = "This operation disables an existing customer using the provided customer ID."
+    )
+    @ApiResponse(responseCode = "204", description = "Customer successfully disabled", content = {})
+    @ApiResponse(responseCode = "404", description = "Customer not found", content = {})
+    @ApiResponse(responseCode = "400", description = "Invalid customer ID or customer is already disabled", content = {})
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> disableCustomer(@PathVariable Long id) {
+        customerService.disableCustomer(id);
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .build();
+    }
 }

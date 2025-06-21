@@ -30,8 +30,7 @@ public class CustomerService {
 
     private void validateBusinessRules(Customer c) {
         if (c.getCpf() != null) {
-            Set<ConstraintViolation<Customer>> violations = validator.validateProperty(c, "cpf");
-            if (!violations.isEmpty()) {
+            if (!isValidCpf(c.getCpf())) {
                 throw new InvalidException("Customer cpf format is invalid");
             }
 
@@ -103,8 +102,8 @@ public class CustomerService {
             if (!newCustomer.getCpf().equals(existingCustomer.getCpf()) && customerRepository.existsByCpf(newCustomer.getCpf())) {
                 throw new ConflictException("CPF already exists.");
             }
-            Set<ConstraintViolation<Customer>> violations = validator.validateProperty(newCustomer, "cpf");
-            if (!violations.isEmpty()) {
+
+            if (!isValidCpf(newCustomer.getCpf())) {
                 throw new InvalidException("Customer cpf format is invalid");
             }
         }
@@ -112,10 +111,11 @@ public class CustomerService {
 
     @Transactional
     public void deleteCustomer(Long id) {
-        Customer customer = findById(id);
-        customerRepository.delete(customer);
+        Customer c = findById(id);
+        customerRepository.delete(c);
     }
 
+    // Aqui inclui o disableCustomer() para soft delete
     @Transactional
     public Customer disableCustomer(Long id) {
         Customer c = findById(id);
@@ -130,7 +130,6 @@ public class CustomerService {
         }
     }
 
-    // Aqui inclui o disableCustomer() para soft delete
     private boolean isValidPhoneNumber(String phone) {
 
         return phone.matches("\\(\\d{2}\\) \\d{4,5}-\\d{4}");
@@ -139,5 +138,10 @@ public class CustomerService {
     private boolean isValidEmail(String email) {
         return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
     }
-
+    private boolean isValidCpf(String cpf) {
+        Customer c = new Customer();
+        c.setCpf(cpf);
+        Set<ConstraintViolation<Customer>> violations = validator.validateProperty(c, "cpf");
+        return violations.isEmpty();
+    }
 }
