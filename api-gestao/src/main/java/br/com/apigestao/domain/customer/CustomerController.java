@@ -4,6 +4,8 @@ import br.com.apigestao.core.ApplicationResponse;
 import br.com.apigestao.infrastructure.validations.CreateValidation;
 import br.com.apigestao.infrastructure.validations.UpdateValidation;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-@Tag(name = "Clientes", description = "")
+@Tag(name = "Clientes", description = "Operations related to managing customers in the system, including creating, updating, disabling, and deleting customer records.")
 @RestController
 @RequestMapping("/clientes")
 @RequiredArgsConstructor
@@ -28,11 +30,28 @@ public class CustomerController {
 
     @Operation(
             summary = "Create a new customer",
-            description = "Creates a new customer in the system using the provided customer data. The created customer's URI will be returned in the Location header."
+            description = "Creates a new customer in the system using the provided customer data. " +
+                    "The created customer's URI will be returned in the Location header. " +
+                    "If the customer already exists (based on CPF or email), a conflict error will be returned."
     )
-    @ApiResponse(responseCode = "201", description = "Customer successfully created", content = {})
-    @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {})
-    @ApiResponse(responseCode = "409", description = "Conflict - Customer data already exists", content = {})
+    @ApiResponse(responseCode = "201", description = "Customer successfully created", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "/1")
+            )
+    })
+    @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"message\": \"Customer email format is invalid\"}")
+            )
+    })
+    @ApiResponse(responseCode = "409", description = "Conflict - Customer data already exists (e.g., CPF or Email already in use)", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"message\": \"Customer email already exists\"}")
+            )
+    })
     @PostMapping
     public ResponseEntity<Void> createCustomer(
             @Validated(CreateValidation.class)
@@ -50,7 +69,6 @@ public class CustomerController {
                 .location(location)
                 .build();
     }
-
     @Operation(
             summary = "Search customers with filters and pagination",
             description = "Search for customers by optional filters like email, CPF, and phone number. Returns a paginated list of customers."
@@ -91,11 +109,27 @@ public class CustomerController {
 
     @Operation(
             summary = "Update an existing Customer",
-            description = "This operation updates an existing customer's details based on the provided customer ID. The customer's data will be updated with the provided fields."
+            description = "This operation updates an existing customer's details based on the provided customer ID. " +
+                    "The customer's data will be updated with the provided fields. If the provided fields contain invalid data, a 400 error will be returned. If the customer already exists (based on CPF or email), a conflict error will be returned."
     )
-    @ApiResponse(responseCode = "200", description = "Customer successfully updated", content = {})
-    @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {})
-    @ApiResponse(responseCode = "409", description = "Conflict - Customer data already exists", content = {})
+    @ApiResponse(responseCode = "200", description = "Customer successfully updated", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"id\": 1, \"name\": \"John Doe\", \"email\": \"john.doe@example.com\"}")
+            )
+    })
+    @ApiResponse(responseCode = "400", description = "Invalid customer data provided", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"message\": \"Customer email format is invalid\"}")
+            )
+    })
+    @ApiResponse(responseCode = "409", description = "Conflict - Customer data already exists (e.g., CPF or Email already in use)", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"message\": \"Customer email already exists\"}")
+            )
+    })
     @PutMapping("/{id}")
     public ResponseEntity<ApplicationResponse<CustomerDTO>> updateCustomer(
             @PathVariable Long id,
@@ -107,7 +141,6 @@ public class CustomerController {
                 .status(HttpStatus.OK)
                 .body(ApplicationResponse.ofSuccess(updatedCustomerDto));
     }
-
     @Operation(
             summary = "Delete a Customer by ID",
             description = "This operation deletes a customer from the system using the provided customer ID."

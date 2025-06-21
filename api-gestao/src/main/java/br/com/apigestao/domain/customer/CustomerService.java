@@ -51,7 +51,7 @@ public class CustomerService {
             throw new InvalidException("Customer name is required");
         }
         if (c.getPhone() != null && !isValidPhoneNumber(c.getPhone())) {
-            throw new InvalidException("Customer phone format is invalid. Use the format: (XX) XXXXX-XXXX.");
+            throw new InvalidException("Customer phone format is invalid. Use the format with 11 numbers: XXXXXXXXXXX.");
         }
         if (c.getCpf() == null || c.getCpf().trim().isEmpty()) {
             throw new InvalidException("Customer cpf is required");
@@ -84,7 +84,7 @@ public class CustomerService {
         mergeNonNull.accept(newCustomer);
 
         if (newCustomer.getPhone() != null && !isValidPhoneNumber(newCustomer.getPhone())) {
-            throw new InvalidException("Customer phone format is invalid. Use the format: (XX) XXXXX-XXXX.");
+            throw new InvalidException("Customer phone format is invalid. Use the format with 11 numbers: XXXXXXXXXXX.");
         }
         if (newCustomer.getName() != null && newCustomer.getName().trim().isEmpty()) {
             throw new InvalidException("Customer name is required.");
@@ -117,22 +117,21 @@ public class CustomerService {
 
     // Aqui inclui o disableCustomer() para soft delete
     @Transactional
-    public Customer disableCustomer(Long id) {
+    public void disableCustomer(Long id) {
         Customer c = findById(id);
         validateDisable(c);
         c.setEnabled(false);
-        return customerRepository.save(c);
+        customerRepository.save(c);
     }
 
     private void validateDisable(Customer c) {
         if (!c.getEnabled()) {
-            throw new InvalidException("User is already disabled");
+            throw new InvalidException("Customer is already disabled");
         }
     }
 
     private boolean isValidPhoneNumber(String phone) {
-
-        return phone.matches("\\(\\d{2}\\) \\d{4,5}-\\d{4}");
+        return phone != null && phone.matches("^\\d{11}$");
     }
 
     private boolean isValidEmail(String email) {

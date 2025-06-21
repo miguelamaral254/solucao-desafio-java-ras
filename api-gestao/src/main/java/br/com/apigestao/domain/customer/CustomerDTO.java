@@ -15,19 +15,19 @@ public record CustomerDTO (
         @Null(groups = CreateValidation.class, message = "Id must be null")
         Long id,
 
-        @Schema(description = "Customer's full name", example = "Osvaldo")
+        @Schema(description = "Customer's full name", example = "João Silva")
         @NotBlank(groups = CreateValidation.class)
         String name,
 
-        @Schema(description = "Customer's CPF", example = "12345678901")
+        @Schema(description = "Customer's CPF", example = "21225491061")
         @NotNull(groups = CreateValidation.class)
         String cpf,
 
-        @Schema(description = "Customer's phone number", example = "(11) 98765-4321")
+        @Schema(description = "Customer's phone number", example = "11999998888")
         @Nullable
         String phone,
 
-        @Schema(description = "Customer's email address", example = "osvaldo.uga@gmail.com")
+        @Schema(description = "Customer's email address", example = "joao@email.com")
         @Nullable
         String email,
 
@@ -41,4 +41,5 @@ public record CustomerDTO (
 
         @Schema(description = "Customer last modification date (should not be provided when creating a new customer)", hidden = true)
         @Null(groups = CreateValidation.class)
-         LocalDateTime lastModifiedDate) implements BaseDTO{}
+         LocalDateTime lastModifiedDate
+) implements BaseDTO{}
