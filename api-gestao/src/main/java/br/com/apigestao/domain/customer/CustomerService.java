@@ -23,15 +23,15 @@ public class CustomerService {
 
     @Transactional()
     public Customer createCustomer(Customer customer) {
-        validateBusinessRules(customer);
+        validateCreate(customer);
 
         return customerRepository.save(customer);
     }
 
-    private void validateBusinessRules(Customer c) {
+    private void validateCreate(Customer c) {
         if (c.getCpf() != null) {
             if (!isValidCpf(c.getCpf())) {
-                throw new InvalidException("Customer cpf format is invalid");
+                throw new InvalidException("Customer cpf is invalid");
             }
 
             if (customerRepository.existsByCpf(c.getCpf())) {
@@ -94,13 +94,13 @@ public class CustomerService {
                 throw new InvalidException("Customer email format is invalid");
             }
             if (customerRepository.existsByEmail(newCustomer.getEmail())) {
-                throw new ConflictException("Email already exists.");
+                throw new ConflictException("Customer Email already exists.");
             }
         }
 
         if (newCustomer.getCpf() != null) {
             if (!newCustomer.getCpf().equals(existingCustomer.getCpf()) && customerRepository.existsByCpf(newCustomer.getCpf())) {
-                throw new ConflictException("CPF already exists.");
+                throw new ConflictException("Customer CPF already exists.");
             }
 
             if (!isValidCpf(newCustomer.getCpf())) {
