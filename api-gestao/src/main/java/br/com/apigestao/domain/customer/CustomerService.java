@@ -4,6 +4,8 @@ import br.com.apigestao.domain.exceptions.ConflictException;
 import br.com.apigestao.domain.exceptions.InvalidException;
 import br.com.apigestao.domain.exceptions.NotFoundException;
 import jakarta.validation.ConstraintViolation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,13 +19,14 @@ import java.util.function.Consumer;
 @AllArgsConstructor
 @Service
 public class CustomerService {
-    private CustomerRepository customerRepository;
-    private Validator validator;
+    private final CustomerRepository customerRepository;
+    private final Validator validator;
+    private final Logger logger = LoggerFactory.getLogger(CustomerService.class);
 
     @Transactional()
     public Customer createCustomer(Customer customer) {
         validateCreate(customer);
-
+        logger.info("Customer {} created", customer.getId());
         return customerRepository.save(customer);
     }
 
@@ -62,11 +65,16 @@ public class CustomerService {
     public Customer findById(Long id) {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Customer not found"));
+
     }
 
     @Transactional(readOnly = true)
     public Page<Customer> searchCustomer(Specification<Customer> specification, Pageable pageable) {
+
+        logger.info("Consulta realizada com sucesso.");
+
         return customerRepository.findAll(specification, pageable);
+
     }
 
     @Transactional
