@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import jakarta.validation.Validator;
-
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -129,11 +128,9 @@ public class CustomerService {
             throw new InvalidException("Customer is already disabled");
         }
     }
-
     private boolean isValidPhoneNumber(String phone) {
         return phone != null && phone.matches("^\\d{11}$");
     }
-
     private boolean isValidEmail(String email) {
         return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
     }

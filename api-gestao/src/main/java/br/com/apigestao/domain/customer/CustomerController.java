@@ -80,6 +80,7 @@ public class CustomerController {
             @RequestParam(value="email", required = false) String email,
             @RequestParam(value="cpf", required = false) String cpf,
             @RequestParam(value="phone", required = false) String phone,
+            @RequestParam(value ="enabled", required = false) Boolean enabled,
             Pageable pageable) {
 
         Specification<Customer> specification = (root, query, criteriaBuilder) -> null;
@@ -97,6 +98,11 @@ public class CustomerController {
         if (phone != null) {
             specification = specification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.equal(root.get("phone"), phone));
+        }
+
+        if (enabled != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("enabled"), enabled));
         }
 
         Page<Customer> customer = customerService.searchCustomer(specification, pageable);

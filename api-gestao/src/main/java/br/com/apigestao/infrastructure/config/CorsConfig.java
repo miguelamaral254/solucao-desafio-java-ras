@@ -13,7 +13,7 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfig {
 
-    private static final Logger logger = LogManager.getLogger(CorsConfig.class);
+        private static final Logger logger = LogManager.getLogger(CorsConfig.class);
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
