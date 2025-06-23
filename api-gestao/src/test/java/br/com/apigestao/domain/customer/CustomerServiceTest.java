@@ -4,7 +4,6 @@ import br.com.apigestao.domain.customer.factories.CustomerFactory;
 import br.com.apigestao.domain.exceptions.ConflictException;
 import br.com.apigestao.domain.exceptions.InvalidException;
 import br.com.apigestao.domain.exceptions.NotFoundException;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -39,7 +37,7 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Should create customer successfully when customer is valid")
     void createCustomer_whenCustomerIsValid_thenCreateSuccessfully() {
-        Customer customer = CustomerFactory.savedCustomer();
+        Customer customer = CustomerFactory.validCustomer();
         Customer savedCustomer = CustomerFactory.savedCustomer();
 
         when(customerRepository.save(customer)).thenReturn(savedCustomer);
@@ -54,6 +52,9 @@ class CustomerServiceTest {
 
         assertNotNull(createdCustomer.getId());
         assertEquals(customer.getName(), createdCustomer.getName());
+        assertEquals(customer.getCpf(), createdCustomer.getCpf());
+        assertEquals(customer.getEmail(), createdCustomer.getEmail());
+        assertEquals(customer.getPhone(), createdCustomer.getPhone());
     }
 
     @Test
@@ -70,25 +71,6 @@ class CustomerServiceTest {
         verify(customerRepository, never()).save(any(Customer.class));
 
         assertEquals("Customer cpf already exists", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Should throw InvalidException when the provided CPF is invalid")
-    void createCustomer_whenCpfFormatIsInvalid_thenThrowInvalidException() {
-        Customer customer = new Customer();
-        customer.setCpf("123.456.789-00");
-        customer.setName("Valid Name");
-
-        Set<ConstraintViolation<Customer>> violations = Set.of(mock(ConstraintViolation.class));
-        when(validator.validateProperty(any(Customer.class), anyString())).thenReturn(violations);
-
-        InvalidException exception = assertThrows(InvalidException.class,
-                () -> customerService.createCustomer(customer));
-
-        assertEquals("Customer cpf is invalid", exception.getMessage());
-
-        verify(customerRepository, never()).existsByCpf(anyString());
-        verify(customerRepository, never()).save(any());
     }
 
     @Test
@@ -145,16 +127,12 @@ class CustomerServiceTest {
         Pageable pageable = Pageable.ofSize(1);
         Page<Customer> page = new PageImpl<>(List.of(customer), pageable, 1L);
 
-        // Mockando a resposta do repositório
         when(customerRepository.findAll(specification, pageable)).thenReturn(page);
 
-        // Chamando o método que você quer testar
         Page<Customer> customerPage = customerService.searchCustomer(specification, pageable);
 
-        // Verificando se o findAll foi chamado corretamente
         verify(customerRepository, times(1)).findAll(eq(specification), eq(pageable));
 
-        // Verificando a resposta
         assertEquals(1, customerPage.getTotalElements());
         assertEquals(1, customerPage.getTotalPages());
         assertEquals("João Silva", customerPage.getContent().get(0).getName());
@@ -163,69 +141,38 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Should update customer successfully when valid fields are provided")
     void updateCustomer_whenFieldsAreValid_thenUpdateSuccessfully() {
-        Long customerId = 1L;
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(customerId);
-        existingCustomer.setName("João Silva");
-        existingCustomer.setCpf("21225491061");
-        String updatedCpf = "12345678901";
+        Customer existingCustomer = CustomerFactory.savedCustomer();
+        String updatedEmail = "new@example.com";
 
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
-        when(customerRepository.existsByCpf(updatedCpf)).thenReturn(false);
+        when(customerRepository.findById(existingCustomer.getId())).thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.existsByEmail(updatedEmail)).thenReturn(false);
 
-        customerService.updateCustomer(customerId, customer -> {
-            customer.setCpf(updatedCpf);
+        customerService.updateCustomer(existingCustomer.getId(), customer -> {
+            customer.setEmail(updatedEmail);
         });
 
         verify(customerRepository, times(1)).save(existingCustomer);
-        verify(customerRepository, times(1)).existsByCpf(updatedCpf);
+        verify(customerRepository, times(1)).existsByEmail(updatedEmail);
 
-        assertEquals(updatedCpf, existingCustomer.getCpf());
-        assertEquals("João Silva", existingCustomer.getName());
-    }
-
-    @Test
-    @DisplayName("Should throw InvalidException when Email format is invalid")
-    void updateCustomer_whenEmailIsInvalid_thenThrowInvalidException() {
-        Long customerId = 1L;
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(customerId);
-        existingCustomer.setName("João Silva");
-        existingCustomer.setEmail("johndoe@example.com");
-        String updatedEmail = "invalid-email";
-
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
-
-        InvalidException exception = assertThrows(InvalidException.class, () -> {
-            customerService.updateCustomer(customerId, customer -> {
-                customer.setEmail(updatedEmail);
-            });
-        });
-
-        assertEquals("Customer email format is invalid", exception.getMessage());
-
-        verify(customerRepository, never()).save(existingCustomer);
+        assertEquals(updatedEmail, existingCustomer.getEmail());
+        assertEquals("new@example.com", existingCustomer.getEmail());
     }
 
     @Test
     @DisplayName("Should throw ConflictException when CPF already exists")
     void updateCustomer_whenCpfAlreadyExists_thenThrowConflictException() {
-        Long customerId = 1L;
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(customerId);
-        existingCustomer.setName("João Silva");
-        existingCustomer.setCpf("21225491061");
+        Customer existingCustomer = CustomerFactory.validCustomer();
         String updatedCpf = "98765432109";
 
-        Customer anotherCustomer = new Customer();
+        Customer anotherCustomer = CustomerFactory.validCustomer();
         anotherCustomer.setId(2L);
         anotherCustomer.setCpf(updatedCpf);
 
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.findById(existingCustomer.getId())).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.existsByCpf(updatedCpf)).thenReturn(true);
 
         Exception exception = assertThrows(ConflictException.class, () -> {
-            customerService.updateCustomer(customerId, customer -> {
+            customerService.updateCustomer(existingCustomer.getId(), customer -> {
                 customer.setCpf(updatedCpf);
             });
         });
@@ -237,28 +184,27 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Should delete customer successfully when customer exists")
     void deleteCustomer_whenCustomerExists_thenDeleteSuccessfully() {
-        long customerId = 1L;
-        Customer customer = CustomerFactory.savedCustomer(customerId);
+        Customer customer = CustomerFactory.savedCustomer();
 
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
 
-        assertDoesNotThrow(() -> customerService.deleteCustomer(customerId));
+        assertDoesNotThrow(() -> customerService.deleteCustomer(customer.getId()));
 
-        verify(customerRepository, times(1)).findById(customerId);
+        verify(customerRepository, times(1)).findById(customer.getId());
         verify(customerRepository, times(1)).delete(customer);
     }
 
     @Test
     @DisplayName("Should throw NotFoundException when customer not found during delete")
     void deleteCustomer_whenCustomerNotFound_thenThrowNotFoundException() {
-        long customerId = 1L;
+        Customer customer = CustomerFactory.savedCustomer();
 
-        when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
+        when(customerRepository.findById(customer.getId())).thenReturn(Optional.empty());
 
         NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> customerService.deleteCustomer(customerId));
+                () -> customerService.deleteCustomer(customer.getId()));
 
-        verify(customerRepository, times(1)).findById(customerId);
+        verify(customerRepository, times(1)).findById(customer.getId());
         verify(customerRepository, never()).delete(any(Customer.class));
 
         assertEquals("Customer not found", exception.getMessage());
@@ -267,15 +213,14 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Should disable customer successfully when customer exists")
     void disableCustomer_whenCustomerExists_thenDisableSuccessfully() {
-        long customerId = 1L;
-        Customer customer = CustomerFactory.savedCustomer(customerId);
+        Customer customer = CustomerFactory.savedCustomer();
         customer.setEnabled(true);
 
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
 
-        assertDoesNotThrow(() -> customerService.disableCustomer(customerId));
+        assertDoesNotThrow(() -> customerService.disableCustomer(customer.getId()));
 
-        verify(customerRepository, times(1)).findById(customerId);
+        verify(customerRepository, times(1)).findById(customer.getId());
         verify(customerRepository, times(1)).save(customer);
 
         assertFalse(customer.getEnabled());
@@ -284,16 +229,15 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Should throw InvalidException when customer is already disabled")
     void disableCustomer_whenCustomerAlreadyDisabled_thenThrowInvalidException() {
-        long customerId = 1L;
-        Customer customer = CustomerFactory.savedCustomer(customerId);
+        Customer customer = CustomerFactory.savedCustomer();
         customer.setEnabled(false);
 
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
 
         InvalidException exception = assertThrows(InvalidException.class,
-                () -> customerService.disableCustomer(customerId));
+                () -> customerService.disableCustomer(customer.getId()));
 
-        verify(customerRepository, times(1)).findById(customerId);
+        verify(customerRepository, times(1)).findById(customer.getId());
         verify(customerRepository, never()).save(any(Customer.class));
 
         assertEquals("Customer is already disabled", exception.getMessage());

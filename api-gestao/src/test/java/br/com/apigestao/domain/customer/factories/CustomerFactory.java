@@ -17,12 +17,14 @@ public class CustomerFactory {
 
     private static Customer baseCustomer() {
         Customer customer = new Customer();
+        customer.setId(DEFAULT_ID);
         customer.setName(DEFAULT_NAME);
         customer.setCpf(DEFAULT_CPF);
         customer.setEmail(DEFAULT_EMAIL);
         customer.setPhone(DEFAULT_PHONE);
         return customer;
     }
+
 
     public static Customer validCustomer() {
         return baseCustomer();
@@ -54,7 +56,7 @@ public class CustomerFactory {
 
     public static Customer invalidCpfCustomer() {
         Customer customer = baseCustomer();
-        customer.setCpf("12345678900");
+        customer.setCpf("123");
         return customer;
     }
 

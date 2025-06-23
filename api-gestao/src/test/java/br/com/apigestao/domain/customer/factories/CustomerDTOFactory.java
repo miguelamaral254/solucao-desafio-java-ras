@@ -12,7 +12,6 @@ public class CustomerDTOFactory {
 
     private CustomerDTOFactory() {}
 
-    // Método para criar CustomerDTO com parâmetros personalizados
     public static CustomerDTO savedCustomerDto(Long id, String name, String cpf, String phone, String email, Boolean enabled) {
         LocalDateTime now = LocalDateTime.now();
         return new CustomerDTO(
@@ -42,7 +41,6 @@ public class CustomerDTOFactory {
         return savedCustomerDto(DEFAULT_ID);
     }
 
-    // Método para criar CustomerDTO com dados inválidos
     public static CustomerDTO invalidCustomerDto() {
         return new CustomerDTO(
                 null,
