@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import jakarta.validation.Validator;
+
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -31,47 +32,21 @@ public class CustomerService {
         return savedCustomer;
     }
 
-    private void validateCreate(Customer c) {
-        if (c.getCpf() != null) {
-           /*
-            if (!isValidCpf(c.getCpf())) {
-                logger.warn("Invalid CPF detected");
-                throw new InvalidException("Customer cpf is invalid");
-            }
+    private void validateCreate(Customer customer) {
+        if (customerRepository.existsByCpf(customer.getCpf())) {
+            logger.warn("CPF already exists in the system");
+            throw new ConflictException("Customer cpf already exists");
+        }
 
-            */
-            if (customerRepository.existsByCpf(c.getCpf())) {
-                logger.warn("CPF already exists in the system");
-                throw new ConflictException("Customer cpf already exists");
-            }
-        } else {
-            logger.warn("CPF not provided for the customer");
-            throw new InvalidException("Customer cpf is required");
-        }
-        if (c.getEmail() != null) {
-            if (customerRepository.existsByEmail(c.getEmail())) {
-                logger.warn("Email already exists in the system");
-                throw new ConflictException("Customer email already exists");
-            }
-            if (!isValidEmail(c.getEmail())) {
-                logger.warn("Invalid email format detected");
-                throw new InvalidException("Customer email format is invalid");
-            }
-        }
-        if (c.getName() == null || c.getName().trim().isEmpty()) {
-            logger.warn("Customer name not provided");
-            throw new InvalidException("Customer name is required");
-        }
-        if (c.getPhone() != null && !isValidPhoneNumber(c.getPhone())) {
-            logger.warn("Invalid phone format detected");
-            throw new InvalidException("Customer phone format is invalid. Use the format with 11 numbers: XXXXXXXXXXX.");
+        if (customerRepository.existsByEmail(customer.getEmail())) {
+            logger.warn("Email already exists in the system");
+            throw new ConflictException("Customer email already exists");
         }
     }
 
     @Transactional(readOnly = true)
     public Customer findById(Long id) {
-        return customerRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Customer not found"));
+        return customerRepository.findById(id).orElseThrow(() -> new NotFoundException("Customer not found"));
     }
 
     @Transactional(readOnly = true)
@@ -94,22 +69,19 @@ public class CustomerService {
         mergeNonNull.accept(newCustomer);
 
         if (newCustomer.getName() != null && newCustomer.getName().trim().isEmpty()) {
-            logger.warn("Customer name is empty");
+            logger.error("Customer name is empty");
             throw new InvalidException("Customer name is required.");
         }
-        if (newCustomer.getEmail() != null && !newCustomer.getEmail().equals(existingCustomer.getEmail())) {
-
-            if (customerRepository.existsByEmail(newCustomer.getEmail())) {
-                logger.warn("Email already exists in the system");
-                throw new ConflictException("Customer Email already exists.");
-            }
+        if (newCustomer.getEmail() != null &&
+                !newCustomer.getEmail().equals(existingCustomer.getEmail()) &&
+                customerRepository.existsByEmail(newCustomer.getEmail())) {
+            logger.error("Email already exists in the system");
+            throw new ConflictException("Customer Email already exists.");
         }
 
-        if (newCustomer.getCpf() != null) {
-            if (!newCustomer.getCpf().equals(existingCustomer.getCpf()) && customerRepository.existsByCpf(newCustomer.getCpf())) {
-                logger.warn("CPF already exists in the system");
-                throw new ConflictException("Customer CPF already exists.");
-            }
+        if (newCustomer.getCpf() != null && (!newCustomer.getCpf().equals(existingCustomer.getCpf()) && customerRepository.existsByCpf(newCustomer.getCpf()))) {
+            logger.error("CPF already exists in the system");
+            throw new ConflictException("Customer CPF already exists.");
         }
     }
 
@@ -132,7 +104,7 @@ public class CustomerService {
 
     private void validateDisable(Customer c) {
         if (!c.getEnabled()) {
-            logger.warn("Customer is already disabled in the system");
+            logger.error("Customer is already disabled in the system");
             throw new InvalidException("Customer is already disabled");
         }
     }
