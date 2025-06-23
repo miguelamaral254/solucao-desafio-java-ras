@@ -1,4 +1,5 @@
 HELP.md
+arquivo.log
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
