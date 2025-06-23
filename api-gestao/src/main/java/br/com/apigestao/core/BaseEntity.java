@@ -16,10 +16,6 @@ public abstract class BaseEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //Tomei a liberdade de criar esse enabled para soft delete
-    @Column(nullable = false)
-    private Boolean enabled;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
@@ -31,7 +27,6 @@ public abstract class BaseEntity implements Serializable {
         LocalDateTime now = LocalDateTime.now();
         this.createdDate = now;
         this.lastModifiedDate = now;
-        this.enabled = true;
     }
 
     @PreUpdate

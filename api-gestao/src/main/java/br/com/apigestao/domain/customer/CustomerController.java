@@ -1,6 +1,7 @@
 package br.com.apigestao.domain.customer;
 
 import br.com.apigestao.core.ApplicationResponse;
+import br.com.apigestao.domain.account.*;
 import br.com.apigestao.infrastructure.validations.CreateValidation;
 import br.com.apigestao.infrastructure.validations.UpdateValidation;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +28,8 @@ import java.net.URI;
 public class CustomerController {
     private final CustomerMapper customerMapper;
     private final CustomerService customerService;
+    private final AccountMapper accountMapper;
+    private final AccountService accountService;
 
     @Operation(
             summary = "Create a new customer",
@@ -69,6 +72,7 @@ public class CustomerController {
                 .location(location)
                 .build();
     }
+
     @Operation(
             summary = "Search customers with filters and pagination",
             description = "Search for customers by optional filters like email, CPF, and phone number. Returns a paginated list of customers."
@@ -77,10 +81,10 @@ public class CustomerController {
     @ApiResponse(responseCode = "400", description = "Invalid filter data provided", content = {})
     @GetMapping
     public ResponseEntity<ApplicationResponse<Page<CustomerDTO>>> searchCustomers(
-            @RequestParam(value="email", required = false) String email,
-            @RequestParam(value="cpf", required = false) String cpf,
-            @RequestParam(value="phone", required = false) String phone,
-            @RequestParam(value ="enabled", required = false) Boolean enabled,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "cpf", required = false) String cpf,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "enabled", required = false) Boolean enabled,
             Pageable pageable) {
 
         Specification<Customer> specification = (root, query, criteriaBuilder) -> null;
@@ -147,6 +151,7 @@ public class CustomerController {
                 .status(HttpStatus.OK)
                 .body(ApplicationResponse.ofSuccess(updatedCustomerDto));
     }
+
     @Operation(
             summary = "Delete a Customer by ID",
             description = "This operation deletes a customer from the system using the provided customer ID."
@@ -175,5 +180,57 @@ public class CustomerController {
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .build();
+    }
+
+    @Operation(
+            summary = "Create a new account",
+            description = "Creates a new account in the system using the provided account data. " +
+                    "The created account's URI will be returned in the Location header. "
+    )
+    @ApiResponse(responseCode = "201", description = "Account successfully created", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{ \"reference\": \"06-2025\", \"value\": 250.00, \"situation\": \"PENDENTE\" }")
+            )
+    })
+    @ApiResponse(responseCode = "400", description = "Invalid account data provided", content = {
+            @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = "{\"message\": \"Account reference format is invalid\"}")
+            )
+    })
+    @PostMapping("/{idCliente}/contas")
+    public ResponseEntity<Void> createAccount(
+            @PathVariable Long idCliente,
+            @Validated(CreateValidation.class)
+            @RequestBody AccountDTO accountDTO) {
+
+        Account account = accountMapper.toEntity(accountDTO);
+        Account savedAccount = accountService.createAccount(account, idCliente);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedAccount.getId())
+                .toUri();
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .location(location)
+                .build();
+    }
+
+    @Operation(summary = "Listar todas as contas de um cliente")
+    @GetMapping("/{idCliente}/contas")
+    public ResponseEntity<ApplicationResponse<Page<AccountDTO>>> getAccounts(
+            @PathVariable Long idCliente,
+            Pageable pageable) {
+
+        Page<Account> accounts = accountService.findAccountsByCustomerId(idCliente, pageable);
+
+        Page<AccountDTO> accountDTO = accountMapper.toDto(accounts);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApplicationResponse.ofSuccess(accountDTO));
     }
 }

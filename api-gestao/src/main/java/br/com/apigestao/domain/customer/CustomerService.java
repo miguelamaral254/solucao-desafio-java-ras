@@ -24,25 +24,25 @@ public class CustomerService {
     public Customer createCustomer(Customer customer) {
         validateCreate(customer);
         Customer savedCustomer = customerRepository.save(customer);
-        logger.info("Customer with ID: {} saved successfully [requestId={}]", customer.getId(), MDC.get("requestId"));
+        logger.info("Cliente com ID: {} salvo com sucesso [requestId={}]", customer.getId(), MDC.get("requestId"));
         return savedCustomer;
     }
 
     private void validateCreate(Customer customer) {
         if (customerRepository.existsByCpf(customer.getCpf())) {
-            logger.error("CPF already exists in the system [requestId={}]", MDC.get("requestId"));
-            throw new ConflictException("Customer cpf already exists");
+            logger.error("CPF já existe no sistema [requestId={}]", MDC.get("requestId"));
+            throw new ConflictException("O CPF do cliente já existe");
         }
 
         if (customerRepository.existsByEmail(customer.getEmail())) {
-            logger.error("Email already exists in the system [requestId={}]", MDC.get("requestId"));
-            throw new ConflictException("Customer email already exists");
+            logger.error("Email já existe no sistema [requestId={}]", MDC.get("requestId"));
+            throw new ConflictException("O email do cliente já existe");
         }
     }
 
     @Transactional(readOnly = true)
     public Customer findById(Long id) {
-        return customerRepository.findById(id).orElseThrow(() -> new NotFoundException("Customer not found"));
+        return customerRepository.findById(id).orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +56,7 @@ public class CustomerService {
         validateUpdate(customer, mergeNonNull);
         mergeNonNull.accept(customer);
         Customer updatedCustomer = customerRepository.save(customer);
-        logger.info("Customer with ID: {} updated successfully [requestId={}]", customer.getId(), MDC.get("requestId"));
+        logger.info("Cliente com ID: {} atualizado com sucesso [requestId={}]", customer.getId(), MDC.get("requestId"));
         return updatedCustomer;
     }
 
@@ -65,43 +65,43 @@ public class CustomerService {
         mergeNonNull.accept(newCustomer);
 
         if (newCustomer.getName() != null && newCustomer.getName().trim().isEmpty()) {
-            logger.error("Customer name is empty [requestId={}]", MDC.get("requestId"));
-            throw new InvalidException("Customer name is required.");
+            logger.error("Nome do cliente está vazio [requestId={}]", MDC.get("requestId"));
+            throw new InvalidException("O nome do cliente é obrigatório.");
         }
         if (newCustomer.getEmail() != null &&
                 !newCustomer.getEmail().equals(existingCustomer.getEmail()) &&
                 customerRepository.existsByEmail(newCustomer.getEmail())) {
-            logger.error("Email already exists in the system [requestId={}]", MDC.get("requestId"));
-            throw new ConflictException("Customer Email already exists.");
+            logger.error("Email já existe no sistema [requestId={}]", MDC.get("requestId"));
+            throw new ConflictException("O email do cliente já existe.");
         }
 
         if (newCustomer.getCpf() != null && (!newCustomer.getCpf().equals(existingCustomer.getCpf()) && customerRepository.existsByCpf(newCustomer.getCpf()))) {
-            logger.error("CPF already exists in the system [requestId={}]", MDC.get("requestId"));
-            throw new ConflictException("Customer CPF already exists.");
+            logger.error("CPF já existe no sistema [requestId={}]", MDC.get("requestId"));
+            throw new ConflictException("O CPF do cliente já existe.");
         }
     }
 
     @Transactional
     public void deleteCustomer(Long id) {
-        Customer c = findById(id);
-        logger.info("Customer with ID: {} was successfully deleted [requestId={}]", id, MDC.get("requestId"));
-        customerRepository.delete(c);
+        Customer customer = findById(id);
+        logger.info("Cliente com ID: {} deletado com sucesso [requestId={}]", id, MDC.get("requestId"));
+        customerRepository.delete(customer);
     }
 
     // Aqui inclui o disableCustomer() para soft delete
     @Transactional
     public void disableCustomer(Long id) {
-        Customer c = findById(id);
-        validateDisable(c);
-        c.setEnabled(false);
-        logger.info("Customer with ID: {} was successfully disabled [requestId={}]", id, MDC.get("requestId"));
-        customerRepository.save(c);
+        Customer customer = findById(id);
+        validateDisable(customer);
+        customer.setEnabled(false);
+        logger.info("Cliente com ID: {} foi desativado com sucesso [requestId={}]", id, MDC.get("requestId"));
+        customerRepository.save(customer);
     }
 
     private void validateDisable(Customer c) {
         if (!c.getEnabled()) {
-            logger.error("Customer is already disabled in the system [requestId={}]", MDC.get("requestId"));
-            throw new InvalidException("Customer is already disabled");
+            logger.error("Cliente já está desativado no sistema [requestId={}]", MDC.get("requestId"));
+            throw new InvalidException("O cliente já está desativado");
         }
     }
 
