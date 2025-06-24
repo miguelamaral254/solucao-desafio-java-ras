@@ -16,6 +16,7 @@ O objetivo deste projeto é implementar uma API RESTful para gerenciar **Cliente
 
 - **Java 17** 
 - **Spring Boot 3.5.3**
+- **Maven**
 - **PostgreSQL** como banco de dados
 - **MapStruct 1.6.3** para mapeamento entre entidades e DTOs
 - **Swagger/OpenAPI** para documentação da API
@@ -129,7 +130,7 @@ Content-Type: application/json
 Clone este repositório utilizando o comando:
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
+git clone https://github.com/miguelamaral254/solucao-desafio-java-ras.git
 ```
 
 2. Configure o banco de dados PostgreSQL:
