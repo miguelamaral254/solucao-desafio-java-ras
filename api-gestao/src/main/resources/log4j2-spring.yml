@@ -1,0 +1,31 @@
+Configuration:
+  status: WARN
+  appenders:
+    Console:
+      name: Console
+      PatternLayout:
+        pattern: "%d{yyyy-MM-dd HH:mm} - %msg%n"
+    RollingFile:
+      name: RollingFile
+      fileName: "logs/weLoveChile-backend.log"
+      filePattern: "logs/weLoveChile-backend-%d{yyyy-MM-dd}.log.gz"
+      PatternLayout:
+        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%5level] %logger{36} [%X{method}] %X{requestURI} reqId=%X{requestId} - %msg%n"
+      Policies:
+        TimeBasedTriggeringPolicy:
+          interval: 1
+          modulate: true
+
+  loggers:
+    Root:
+      level: info
+      AppenderRef:
+        - ref: Console
+        - ref: RollingFile
+    Logger:
+      name: br.com.apigestao
+      level: debug
+      additivity: false
+      AppenderRef:
+        - ref: Console
+        - ref: RollingFile

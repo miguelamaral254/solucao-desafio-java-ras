@@ -13,7 +13,7 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfig {
 
-        private static final Logger logger = LogManager.getLogger(CorsConfig.class);
+        private static final Logger log = LogManager.getLogger(CorsConfig.class);
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -27,7 +27,7 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
 
-        logger.info("CORS Configurado com sucesso. Permitidos: Origem - *, Métodos - GET, POST, PUT, DELETE, OPTIONS, Headers - Authorization, Cache-Control, Content-Type");
+        log.info("CORS Configurado com sucesso. Permitidos: Origem - *, Métodos - GET, POST, PUT, DELETE, OPTIONS, Headers - Authorization, Cache-Control, Content-Type");
 
         return source;
     }

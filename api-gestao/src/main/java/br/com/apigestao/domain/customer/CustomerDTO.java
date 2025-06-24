@@ -11,39 +11,39 @@ import java.time.LocalDateTime;
 
 public record CustomerDTO (
 
-        @Schema(description = "Customer ID (should not be provided when creating a new customer)", hidden = true)
-        @Null(groups = CreateValidation.class, message = "Id must be null")
+        @Schema(description = "ID do cliente (não deve ser fornecido ao criar um novo cliente)", hidden = true)
+        @Null(groups = CreateValidation.class, message = "O ID deve ser nulo")
         Long id,
 
-        @Schema(description = "Customer's full name", example = "João Silva")
+        @Schema(description = "Nome completo do cliente", example = "João Silva")
         @NotBlank(groups = CreateValidation.class)
-        @Pattern(regexp = "^[^0-9]*$", message = "Invalid name. It cannot contain numbers.")
+        @Pattern(regexp = "^[^0-9]*$", message = "Nome inválido. Não pode conter números.")
         String name,
 
-        @Schema(description = "Customer's CPF", example = "21225491061")
+        @Schema(description = "CPF do cliente", example = "21225491061")
         @NotNull(groups = CreateValidation.class)
-        @CPF(message = "Invalid CPF format")
+        @CPF(message = "Formato de CPF inválido")
         String cpf,
 
-        @Schema(description = "Customer's phone number", example = "11999998888")
+        @Schema(description = "Telefone do cliente", example = "11999998888")
         @Nullable
-        @Pattern(regexp = "^\\d{11}$", message = "Invalid phone number. It should consist of 11 digits without any separators.")
+        @Pattern(regexp = "^\\d{11}$", message = "Número de telefone inválido. Deve conter 11 dígitos sem separadores.")
         String phone,
 
-        @Schema(description = "Customer's email address", example = "joao@email.com")
+        @Schema(description = "E-mail do cliente", example = "joao@email.com")
         @Nullable
-        @Email(message = "Invalid Email format")
+        @Email(message = "Formato de e-mail inválido")
         String email,
 
-        @Schema(description = "Customer status (should not be provided when creating a new customer)", hidden = true)
-        @Null(groups = CreateValidation.class, message = "Enable must be null")
+        @Schema(description = "Status do cliente (não deve ser fornecido ao criar um novo cliente)", hidden = true)
+        @Null(groups = CreateValidation.class, message = "O campo 'enabled' deve ser nulo")
         Boolean enabled,
 
-        @Schema(description = "Customer creation date (should not be provided when creating a new customer)", hidden = true)
-        @Null(groups = CreateValidation.class, message = "Create date must be null")
+        @Schema(description = "Data de criação do cliente (não deve ser fornecida ao criar um novo cliente)", hidden = true)
+        @Null(groups = CreateValidation.class, message = "A data de criação deve ser nula")
         LocalDateTime createdDate,
 
-        @Schema(description = "Customer last modification date (should not be provided when creating a new customer)", hidden = true)
-        @Null(groups = CreateValidation.class, message = "Last modified must be null")
-         LocalDateTime lastModifiedDate
-) implements BaseDTO{}
+        @Schema(description = "Data da última modificação do cliente (não deve ser fornecida ao criar um novo cliente)", hidden = true)
+        @Null(groups = CreateValidation.class, message = "A data de última modificação deve ser nula")
+        LocalDateTime lastModifiedDate
+) implements BaseDTO {}

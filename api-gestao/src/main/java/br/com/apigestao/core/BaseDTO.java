@@ -9,6 +9,4 @@ public interface BaseDTO {
     LocalDateTime createdDate();
 
     LocalDateTime lastModifiedDate();
-
-    Boolean enabled();
 }
