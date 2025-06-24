@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.function.Consumer;
 
@@ -48,7 +47,10 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public Account findById(Long id) {
-        return accountRepository.findById(id).orElseThrow(()-> new NotFoundException("Conta não encontrada"));
+        return accountRepository.findById(id).orElseThrow(() -> {
+            log.error("Conta não encontrada [requestId={}]", MDC.get("requestId"));
+            return new NotFoundException("Conta não encontrada");
+        });
     }
 
     @Transactional
@@ -65,9 +67,11 @@ public class AccountService {
 
     private void validateUpdate(Account account, Account updatedAccount) {
         if (account.getSituation().equals(Situation.CANCELADA)) {
+            log.error("Contas canceladas não podem ser atualizadas [requestId={}]", MDC.get("requestId"));
             throw new UnauthorizedException("Contas canceladas não podem ser atualizadas");
         }
         if (updatedAccount.getValue() !=null && updatedAccount.getValue().compareTo(BigDecimal.ZERO) < 0) {
+            log.error("O valor final após a atualização não pode ser negativo [requestId={}]", MDC.get("requestId"));
             throw new InvalidException("O valor final após a atualização não pode ser negativo");
         }
     }
