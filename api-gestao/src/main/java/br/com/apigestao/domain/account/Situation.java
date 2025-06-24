@@ -4,5 +4,4 @@ public enum Situation {
     PENDENTE,
     PAGA,
     CANCELADA;
-
 }
